@@ -1,0 +1,23 @@
+sudo: required
+services: 
+  - docker
+
+before_install:
+  - docker build -t csolorio/react-test ./client/Dockerfile.dev ./client
+
+script:
+  - docker run csolorio/react-test npm test -- --coverage
+
+after_success:
+  - docker build -t csolorio/multi-client ./client
+  - docker build -t csolorio/multi-nginx ./nginx
+  - docker build -t csolorio/multi-server ./server
+  - docker build -t csolorio/multi-worker ./worker
+  # Log in to docker
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+  # Take those images and push them to docker hub
+  - docker push  csolorio/multi-client
+  - docker push  csolorio/multi-nginx
+  - docker push  csolorio/multi-server
+  - docker push  csolorio/multi-worker
+
